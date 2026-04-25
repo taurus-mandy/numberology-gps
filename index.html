@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -73,6 +72,18 @@ body {
   border-color: #c8922a;
   box-shadow: 0 0 0 3px rgba(200,146,42,.2);
 }
+.name-wrap { margin-bottom: 14px; }
+.name-wrap label { display: block; font-size: 11px; color: #7a5a20; margin-bottom: 4px; letter-spacing: 1px; text-align: center; }
+.name-wrap input {
+  display: block; width: 100%;
+  border: 1.5px solid #a07830; border-radius: 6px;
+  background: #fff; color: #1a1410;
+  font-size: 16px; font-weight: 600;
+  text-align: center; padding: 10px;
+  outline: none; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.name-wrap input:focus { border-color: #c8922a; box-shadow: 0 0 0 3px rgba(200,146,42,.2); }
 .input-hint { font-size: 10px; color: #8a7050; text-align: center; margin-bottom: 12px; }
 .go-btn {
   display: block; width: 100%; padding: 13px;
@@ -234,6 +245,10 @@ body {
 <div class="input-card">
   <div class="card-title">數字人生GPS · 生命地圖</div>
   <div class="card-sub">NUMEROLOGY LIFE MAP</div>
+  <div class="name-wrap">
+    <label>姓名</label>
+    <input id="uname" type="text" placeholder="請輸入您的姓名" maxlength="20" autocomplete="off">
+  </div>
   <div class="fields-wrap">
     <div class="fg">
       <div class="fg-label">日期 DD</div>
@@ -278,6 +293,7 @@ body {
     </div>
     <div class="pg-hline"></div>
   </div>
+  <div class="bday-line" id="name-line" style="font-size:14px;font-weight:700;color:#1a1410;letter-spacing:3px;margin-bottom:2px;"></div>
   <div class="bday-line" id="bday-line"></div>
   <div class="pg-body">
     <div class="left-col">
@@ -383,7 +399,7 @@ var ITEMS = [
   ['子女／下屬\n(中年41-60歲)', function(v) { return [v.Q, v.P, v.R]; }],
   ['事業過程 1',                 function(v) { return [v.I, v.M, v.S]; }],
   ['事業過程 2',                 function(v) { return [v.J, v.M, v.T]; }],
-  ['工作／朋友\n(早年21-40歲)', function(v) { return [v.S, v.T, v.U]; }],
+  ['工作／朋友\n(早年21-40歲)', function(v) { return [v.U, v.T, v.S]; }],
   ['婚姻過程 1',                 function(v) { return [v.K, v.N, v.V]; }],
   ['婚姻過程 2',                 function(v) { return [v.L, v.N, v.W]; }],
   ['晚年（61歲後）',             function(v) { return [v.V, v.W, v.X]; }],
@@ -412,6 +428,11 @@ function doCalc() {
   var v = {A:A,B:B,C:C,D:D,E:E,F:F,G:G,H:H,
            I:I,J:J,K:K,L:L,M:M,N:N,O:O,
            P:P,Q:Q,R:R,S:S,T:T,U:U,V:V,W:W,X:X,HIDDIG:HIDDIG};
+
+  // name
+  var uname = document.getElementById('uname').value.trim();
+  var nameEl = document.getElementById('name-line');
+  nameEl.textContent = uname ? '姓名：' + uname : '';
 
   // bday
   var dd = String(A) + String(B);
@@ -668,7 +689,7 @@ function drawDiamond(I, J, K, L, M, N, O, P, Q) {
 // ── render periods ──
 function renderPeriods(S,T,U,R,V,W,X) {
   var e=document.getElementById('p-early'); e.innerHTML='';
-  [S,T,U].forEach(function(n){e.appendChild(mkC(n,'nc-sm'));});
+  [U,T,S].forEach(function(n){e.appendChild(mkC(n,'nc-sm'));});
   var m=document.getElementById('p-mid'); m.innerHTML='';
   m.appendChild(mkC(R,'nc-md'));
   var l=document.getElementById('p-late'); l.innerHTML='';
