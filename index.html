@@ -399,7 +399,7 @@ var ITEMS = [
   ['子女／下屬\n(中年41-60歲)', function(v) { return [v.Q, v.P, v.R]; }],
   ['事業過程 1',                 function(v) { return [v.I, v.M, v.S]; }],
   ['事業過程 2',                 function(v) { return [v.J, v.M, v.T]; }],
-  ['工作／朋友\n(早年21-40歲)', function(v) { return [v.U, v.T, v.S]; }],
+  ['工作／朋友\n(早年21-40歲)', function(v) { return [v.S, v.T, v.U]; }],
   ['婚姻過程 1',                 function(v) { return [v.K, v.N, v.V]; }],
   ['婚姻過程 2',                 function(v) { return [v.L, v.N, v.W]; }],
   ['晚年（61歲後）',             function(v) { return [v.V, v.W, v.X]; }],
@@ -736,10 +736,6 @@ function renderMissing(I,J,K,L,M,N,O) {
 function renderHidden(HIDDIG) {
   var wrap=document.getElementById('hidden-row'); wrap.innerHTML='';
   HIDDIG.forEach(function(n){ wrap.appendChild(mkC(n,'nc-lg')); });
-  var note=document.createElement('div');
-  note.className='hidden-note';
-  note.textContent='主性格+主性格\n逐位相加化單位數';
-  wrap.appendChild(note);
 }
 
 // resize redraw
