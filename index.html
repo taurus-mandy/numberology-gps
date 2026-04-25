@@ -1,1 +1,739 @@
-# numberology-gps
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數字人生GPS · 生命地圖</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #2c2416;
+  font-family: "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 12px 40px;
+  gap: 16px;
+}
+
+/* ═══ INPUT CARD ═══ */
+.input-card {
+  background: #faf6ee;
+  border: 1.5px solid #9a7a3a;
+  border-radius: 10px;
+  padding: 20px 22px 16px;
+  width: 100%;
+  max-width: 580px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.card-title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1410;
+  letter-spacing: 4px;
+  margin-bottom: 2px;
+}
+.card-sub {
+  text-align: center;
+  font-size: 10px;
+  color: #8a6a2a;
+  letter-spacing: 5px;
+  margin-bottom: 16px;
+}
+.fields-wrap {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.fg { text-align: center; }
+.fg-label { font-size: 11px; color: #7a5a20; margin-bottom: 4px; letter-spacing: 1px; }
+.dig-row { display: flex; gap: 4px; justify-content: center; }
+.dig-row input {
+  width: 42px;
+  height: 48px;
+  border: 1.5px solid #a07830;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a1410;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+  cursor: text;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  transition: border-color .15s, box-shadow .15s;
+}
+.dig-row input:focus {
+  border-color: #c8922a;
+  box-shadow: 0 0 0 3px rgba(200,146,42,.2);
+}
+.input-hint { font-size: 10px; color: #8a7050; text-align: center; margin-bottom: 12px; }
+.go-btn {
+  display: block; width: 100%; padding: 13px;
+  background: #1a1410; color: #d4a840;
+  border: 1.5px solid #9a7a3a; border-radius: 6px;
+  font-size: 15px; font-family: inherit; font-weight: 700;
+  letter-spacing: 5px; cursor: pointer;
+  transition: background .18s;
+}
+.go-btn:hover, .go-btn:active { background: #2e2010; }
+
+/* ═══ A4 RESULT PAGE ═══ */
+.a4-page {
+  display: none;
+  background: #faf6ee;
+  width: 210mm;
+  min-height: 290mm;
+  padding: 12mm 11mm 14mm;
+  box-shadow: 0 6px 40px rgba(0,0,0,0.6);
+  position: relative;
+}
+.a4-page.show { display: block; }
+.a4-page::before {
+  content: '';
+  position: absolute;
+  inset: 5mm;
+  border: 0.5px solid #b09060;
+  pointer-events: none;
+}
+
+/* Page header */
+.pg-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.pg-hline { flex: 1; height: 1px; background: #9a7a3a; }
+.pg-htitle { text-align: center; }
+.pg-htitle h1 { font-size: 18px; font-weight: 700; color: #1a1410; letter-spacing: 5px; }
+.pg-htitle p  { font-size: 9px; color: #8a6a2a; letter-spacing: 4px; margin-top: 2px; }
+.bday-line { text-align: center; font-size: 11px; color: #7a5a20; letter-spacing: 2px; margin-bottom: 10px; }
+
+/* Two-column body */
+.pg-body {
+  display: grid;
+  grid-template-columns: 1fr 68mm;
+  gap: 6mm;
+  align-items: start;
+}
+
+/* ── Left column ── */
+.left-col { }
+.left-col canvas { display: block; width: 100%; }
+
+/* Period row */
+.period-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px;
+  margin-top: 7px;
+}
+.pbox {
+  background: #fff;
+  border: 0.8px solid #b09060;
+  border-radius: 5px;
+  padding: 6px 4px 5px;
+  text-align: center;
+}
+.pbox-name { font-size: 10px; font-weight: 700; color: #1a1410; margin-bottom: 1px; }
+.pbox-age  { font-size: 8px; color: #8a7050; margin-bottom: 4px; }
+.pbox-nums { display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap; }
+
+/* Extras */
+.extras-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 5px;
+}
+.ebox {
+  background: #fff;
+  border: 0.8px solid #b09060;
+  border-radius: 5px;
+  padding: 7px 6px;
+}
+.ebox-title {
+  font-size: 9px; color: #7a5a20; letter-spacing: 1px;
+  border-bottom: 0.5px solid #d0b880;
+  padding-bottom: 4px; margin-bottom: 5px; text-align: center;
+}
+.missing-row { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.hidden-row  { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.hidden-note { font-size: 9px; color: #8a7050; line-height: 1.5; white-space: pre-line; }
+
+/* ── Right column ── */
+.right-col {
+  background: #f5efe0;
+  border: 0.8px solid #b09060;
+  border-radius: 5px;
+  padding: 9px 8px 7px;
+}
+.rcol-title {
+  font-size: 12px; font-weight: 700; color: #1a1410;
+  letter-spacing: 3px; text-align: center;
+  border-bottom: 0.8px solid #c0a060;
+  padding-bottom: 6px; margin-bottom: 6px;
+}
+.r-item {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 2px;
+  border-bottom: 0.4px solid rgba(160,120,60,.25);
+}
+.r-item:last-child { border-bottom: none; }
+.r-idx  { font-size: 9px; color: #8a6a2a; width: 14px; text-align: right; flex-shrink: 0; }
+.r-vals { display: flex; gap: 2px; flex-shrink: 0; }
+.r-name { font-size: 10px; color: #1a1410; flex: 1; line-height: 1.4; white-space: pre-line; }
+
+/* ── Number circles ── */
+.nc {
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-family: inherit;
+  border: 1.2px solid; flex-shrink: 0;
+}
+.nc-xs { width: 20px; height: 20px; font-size: 10px; }
+.nc-sm { width: 26px; height: 26px; font-size: 13px; }
+.nc-md { width: 32px; height: 32px; font-size: 16px; }
+.nc-lg { width: 40px; height: 40px; font-size: 20px; }
+.nc-xl { width: 48px; height: 48px; font-size: 22px; }
+
+.c1 { background:#fff0f0; border-color:#cc5050; color:#7a1010; }
+.c2 { background:#fff4e6; border-color:#c07820; color:#7a3800; }
+.c3 { background:#fffbe6; border-color:#a8a020; color:#585200; }
+.c4 { background:#eefaee; border-color:#409840; color:#1a5a1a; }
+.c5 { background:#eaf4ff; border-color:#3878b8; color:#003878; }
+.c6 { background:#f0eeff; border-color:#6858b8; color:#281870; }
+.c7 { background:#ffeef8; border-color:#b05890; color:#701050; }
+.c8 { background:#f4f4f4; border-color:#606060; color:#1e1e1e; }
+.c9 { background:#fdf5e2; border-color:#b08820; color:#604400; }
+
+/* Print button */
+.print-bar { display: none; justify-content: center; }
+.print-bar.show { display: flex; }
+.print-btn {
+  background: #1a1410; color: #d4a840;
+  border: 1.5px solid #9a7a3a; border-radius: 6px;
+  padding: 11px 40px; font-size: 14px; font-family: inherit;
+  font-weight: 700; letter-spacing: 4px; cursor: pointer;
+}
+.print-btn:hover { background: #2e2010; }
+
+@media print {
+  body { background: white; padding: 0; gap: 0; }
+  .input-card, .print-bar { display: none !important; }
+  .a4-page { display: block !important; box-shadow: none; width: 100%; min-height: auto; }
+  .a4-page::before { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- INPUT CARD -->
+<div class="input-card">
+  <div class="card-title">數字人生GPS · 生命地圖</div>
+  <div class="card-sub">NUMEROLOGY LIFE MAP</div>
+  <div class="fields-wrap">
+    <div class="fg">
+      <div class="fg-label">日期 DD</div>
+      <div class="dig-row">
+        <input id="d0" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="0" autocomplete="off">
+        <input id="d1" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="1" autocomplete="off">
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fg-label">月份 MM</div>
+      <div class="dig-row">
+        <input id="d2" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="0" autocomplete="off">
+        <input id="d3" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="1" autocomplete="off">
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fg-label">世紀</div>
+      <div class="dig-row">
+        <input id="d4" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="1" autocomplete="off">
+        <input id="d5" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="9" autocomplete="off">
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fg-label">年份後兩位</div>
+      <div class="dig-row">
+        <input id="d6" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="8" autocomplete="off">
+        <input id="d7" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="5" autocomplete="off">
+      </div>
+    </div>
+  </div>
+  <div class="input-hint">例：1985年10月31日 → 日:3,1 &nbsp; 月:1,0 &nbsp; 世紀:1,9 &nbsp; 年份:8,5</div>
+  <button class="go-btn" id="go-btn">✦ 計算生命地圖 ✦</button>
+</div>
+
+<!-- A4 RESULT PAGE -->
+<div class="a4-page" id="a4-page">
+  <div class="pg-head">
+    <div class="pg-hline"></div>
+    <div class="pg-htitle">
+      <h1>數字人生GPS · 生命地圖</h1>
+      <p>NUMEROLOGY LIFE MAP</p>
+    </div>
+    <div class="pg-hline"></div>
+  </div>
+  <div class="bday-line" id="bday-line"></div>
+  <div class="pg-body">
+    <div class="left-col">
+      <canvas id="cvs"></canvas>
+      <div class="period-row">
+        <div class="pbox">
+          <div class="pbox-name">早年</div>
+          <div class="pbox-age">21–40歲</div>
+          <div class="pbox-nums" id="p-early"></div>
+        </div>
+        <div class="pbox">
+          <div class="pbox-name">中年</div>
+          <div class="pbox-age">41–60歲</div>
+          <div class="pbox-nums" id="p-mid"></div>
+        </div>
+        <div class="pbox">
+          <div class="pbox-name">晚年</div>
+          <div class="pbox-age">61歲後</div>
+          <div class="pbox-nums" id="p-late"></div>
+        </div>
+      </div>
+      <div class="extras-row">
+        <div class="ebox">
+          <div class="ebox-title">倒三角形內缺失數字</div>
+          <div class="missing-row" id="missing-row"></div>
+        </div>
+        <div class="ebox">
+          <div class="ebox-title">隱藏號碼</div>
+          <div class="hidden-row" id="hidden-row"></div>
+        </div>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="rcol-title">生命密碼</div>
+      <div id="r-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="print-bar" id="print-bar">
+  <button class="print-btn" onclick="window.print()">✦ 列印 / 儲存 PDF ✦</button>
+</div>
+
+<script>
+// ── helpers ──
+function rd(n) {
+  n = Math.abs(Math.round(n));
+  while (n > 9) { var s = 0; while (n > 0) { s += n % 10; n = Math.floor(n / 10); } n = s; }
+  return n;
+}
+function cc(n) { return 'c' + (((n - 1) % 9) + 1); }
+function mkC(n, sz) {
+  var d = document.createElement('div');
+  d.className = 'nc ' + (sz || 'nc-sm') + ' ' + cc(n);
+  d.textContent = n;
+  return d;
+}
+// Hidden: MNO+MNO => each digit pair summed & reduced, then total reduced
+// e.g. M=8,N=8,O=7 => rd(8+8)=7, rd(8+8)=7, rd(7+7)=5 => rd(7+7+5)=rd(19)=10=>1... 
+// Wait: 7+7+5=19=>1+9=10=>1+0=1. But example says 775 => hidden=775 means the THREE digits 7,7,5
+// i.e. the hidden number IS the 3-digit combination 775, displayed as three separate circles
+function calcHiddenDigits(M, N, O) {
+  return [rd(M + M), rd(N + N), rd(O + O)];
+}
+
+// ── input auto-advance ──
+var inputs = [];
+for (var i = 0; i < 8; i++) inputs.push(document.getElementById('d' + i));
+
+inputs.forEach(function(inp, idx) {
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { doCalc(); return; }
+    if (e.key === 'Backspace' && this.value === '' && idx > 0) {
+      e.preventDefault();
+      inputs[idx - 1].focus();
+      inputs[idx - 1].value = '';
+    }
+  });
+  inp.addEventListener('input', function() {
+    // strip non-digits
+    this.value = this.value.replace(/[^0-9]/g, '');
+    if (this.value.length > 1) this.value = this.value.slice(-1);
+    if (this.value.length === 1 && idx < 7) {
+      inputs[idx + 1].focus();
+      inputs[idx + 1].select();
+    }
+  });
+  inp.addEventListener('focus', function() { this.select(); });
+});
+
+document.getElementById('go-btn').addEventListener('click', function(e) {
+  e.preventDefault();
+  doCalc();
+});
+
+// ── 13 items ──
+var ITEMS = [
+  ['父基因（事業）',             function(v) { return [v.I, v.J, v.M]; }],
+  ['母基因（婚姻）',             function(v) { return [v.K, v.L, v.N]; }],
+  ['主性格（60%）',              function(v) { return [v.M, v.N, v.O]; }],
+  ['人生過程 1',                 function(v) { return [v.M, v.O, v.P]; }],
+  ['人生過程 2',                 function(v) { return [v.N, v.O, v.Q]; }],
+  ['子女／下屬\n(中年41-60歲)', function(v) { return [v.Q, v.P, v.R]; }],
+  ['事業過程 1',                 function(v) { return [v.I, v.M, v.S]; }],
+  ['事業過程 2',                 function(v) { return [v.J, v.M, v.T]; }],
+  ['工作／朋友\n(早年21-40歲)', function(v) { return [v.S, v.T, v.U]; }],
+  ['婚姻過程 1',                 function(v) { return [v.K, v.N, v.V]; }],
+  ['婚姻過程 2',                 function(v) { return [v.L, v.N, v.W]; }],
+  ['晚年（61歲後）',             function(v) { return [v.V, v.W, v.X]; }],
+  ['隱藏號碼',                   function(v) { return v.HIDDIG; }],
+];
+
+// ── main ──
+function doCalc() {
+  var vals = inputs.map(function(inp) {
+    var raw = inp.value.trim();
+    if (raw === '') return 0;
+    var n = parseInt(raw, 10);
+    return isNaN(n) ? 0 : n;
+  });
+
+  var A=vals[0], B=vals[1], C=vals[2], D=vals[3];
+  var E=vals[4], F=vals[5], G=vals[6], H=vals[7];
+
+  var I=rd(A+B), J=rd(C+D), K=rd(E+F), L=rd(G+H);
+  var M=rd(I+J), N=rd(K+L), O=rd(M+N);
+  var P=rd(M+O), Q=rd(N+O), R=rd(Q+P);
+  var S=rd(I+M), T=rd(J+M), U=rd(S+T);
+  var V=rd(K+N), W=rd(L+N), X=rd(V+W);
+  var HIDDIG = calcHiddenDigits(M, N, O);
+
+  var v = {A:A,B:B,C:C,D:D,E:E,F:F,G:G,H:H,
+           I:I,J:J,K:K,L:L,M:M,N:N,O:O,
+           P:P,Q:Q,R:R,S:S,T:T,U:U,V:V,W:W,X:X,HIDDIG:HIDDIG};
+
+  // bday
+  var dd = String(A) + String(B);
+  var mm = String(C) + String(D);
+  var yy = String(E) + String(F) + String(G) + String(H);
+  document.getElementById('bday-line').textContent = '出生日期：' + yy + ' 年 ' + mm + ' 月 ' + dd + ' 日';
+
+  drawDiamond(I, J, K, L, M, N, O, P, Q);
+  renderPeriods(S, T, U, R, V, W, X);
+  renderList(v);
+  renderMissing(I, J, K, L, M, N, O);
+  renderHidden(HIDDIG);
+
+  var pg = document.getElementById('a4-page');
+  pg.classList.add('show');
+  document.getElementById('print-bar').classList.add('show');
+  setTimeout(function() { pg.scrollIntoView({ behavior: 'smooth' }); }, 50);
+}
+
+// ── draw diamond ──
+function drawDiamond(I, J, K, L, M, N, O, P, Q) {
+  var canvas = document.getElementById('cvs');
+  var wrap = canvas.parentElement;
+  var PX = wrap.clientWidth;
+  if (!PX || PX < 10) PX = 420;
+  var PY = Math.round(PX * 0.82);
+  canvas.width = PX;
+  canvas.height = PY;
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, PX, PY);
+
+  // paper bg
+  ctx.fillStyle = '#faf6ee';
+  ctx.fillRect(0, 0, PX, PY);
+
+  var BASE = 460;
+  function s(v) { return v * PX / BASE; }
+
+  // ── Node positions (in 460-unit space) ──
+  // Layout matches reference image:
+  // Top single box (O is NOT here — O is center)
+  // Reference shows: top single box = J? No —
+  // Reference: top = single highlighted box (7 in pink = I in example?)
+  // Row2: 4 boxes = I J K L
+  // Middle cross: M (left circle), N (right circle), O (center red highlight)
+  // Left/right standalone boxes = Q, P  
+  // Bottom row: two circles = 9, 6 (those are Q,P positions in lower triangle)
+  
+  // Re-reading reference carefully:
+  // Top single box above the diamond = that's the top apex of upright triangle
+  // The star has: top-apex, 4-top-row, left-mid, right-mid, center, bottom-left, bottom-right, bottom-apex
+  // Reference image layout:
+  //   [7]           ← single top box (apex of upright △) = this seems to be I or a special value
+  // [8][8][1][9]    ← top row of inverted △
+  //   [7] [1]       ← M and N (inner intersection)
+  // [3]  [8]  [7]   ← left standalone, center O (RED), right standalone
+  //   [9]  [6]      ← Q and P (inner bottom intersection)
+  //                 ← bottom of upright △ (not shown separately)
+
+  // So the layout is:
+  // The two triangles form a star. Nodes at:
+  // - Top single (apex of upright △, center-top)
+  // - Top-left and top-right corners of inverted △ (but 4 nodes across top)
+  // - Inner 6 intersection points of the star
+  // - The reference uses I J K L across the middle horizontal band
+  // and M,N in upper-inner, O in center, Q,P in lower-inner
+  // with left/right outer boxes being separate (period or extra info)
+
+  // Based on reference image structure:
+  // TOP apex (single box, top-center) = shown as "7" pink box
+  // The 4 boxes [8][8][1][9] = top horizontal row
+  // [7] [1] = upper inner (M and N)
+  // left outer [3], center O [8] RED, right outer [7]
+  // lower inner [9] [6] = Q and P
+  
+  // Mapping: the top single box must be a computed value shown at very top
+  // Looking at the numbers: top=7(I?), row=[8,8,1,9](IJKL), M=7,N=1, O=8(RED), Q=9,P=6
+  // Outer left=3, outer right=7 — these look like Q+P=R=6? or period values
+  // Actually left outer box and right outer box in the reference = those are the "3" and "7"
+  // which match early/late period values displayed outside the star
+
+  // SIMPLIFICATION: I'll draw exactly what the reference shows:
+  // - Inverted ▽ with top-row 4 boxes (I,J,K,L)
+  // - Upright △ pointing up, apex at top
+  // - Intersections: M(upper-left-inner), N(upper-right-inner), O(CENTER, RED)
+  // - Q(lower-left-inner), P(lower-right-inner)
+  // - The TOP of upright △ apex = a single box showing... 
+  //   In reference it shows "7" at top alone — this is I (=rd(A+B)) displayed as the "birth day number"
+  //   Actually no — looking at the star, the apex of the upright triangle that points UP
+  //   sits at the very top, above the 4-box row. This apex value in reference = 7
+  //   Given example has I=8,J=8,K=1,L=9,M=7,N=1,O=8... hmm M=7 and the top single is 7
+  //   So the top single box = M (the combined day+month)? That makes sense visually.
+  // Let me place nodes:
+
+  // Upright △ apex (top-center): show M here? Or show it as part of star...
+  // Actually the STANDARD GPS map has the top-single as the APEX of the upright triangle
+  // In the reference the number there = 7 = I+J=M. Yes, M is at top apex of upright △.
+  // But M is ALSO shown inside the star at the intersection...
+  // 
+  // Re-examining: the reference has M shown TWICE? No — the "7" at top = M
+  // and "[7]" inside = also M repeated for the intersection display.
+  // 
+  // I'll follow the visual exactly: top single box, 4-box row, then star intersections.
+
+  // Star geometry:
+  // Inverted ▽: top-left(60,110), top-right(400,110), apex(230,330)
+  // Upright △:  bottom-left(60,330), bottom-right(400,330), apex(230,45)
+  // Inner hexagon intersections at ~1/3 marks
+
+  var inv_TL = {x:60,  y:115};
+  var inv_TR = {x:400, y:115};
+  var inv_B  = {x:230, y:320};
+  var upr_BL = {x:60,  y:320};
+  var upr_BR = {x:400, y:320};
+  var upr_T  = {x:230, y:40};  // upright apex (top)
+
+  // Intersection points (1/3 along each side):
+  // Upper-left inner (M): on inv left side at 1/3, and on upright left side at 2/3
+  //   inv left: TL→inv_B: at t=1/3: x=60+(230-60)/3=117, y=115+(320-115)/3=183
+  //   upr left: BL→upr_T: at t=1/3: x=60+(230-60)/3=117, y=320-(320-40)/3=227  ... not same
+  // These triangles aren't equilateral in our layout, so I'll manually position to look right:
+
+  var NM = {x:148, y:175};  // upper-left inner
+  var NN = {x:312, y:175};  // upper-right inner
+  var NO = {x:230, y:215};  // center (RED highlight)
+  var NQ = {x:166, y:275};  // lower-left inner
+  var NP = {x:294, y:275};  // lower-right inner
+
+  // Top row 4 boxes
+  var NI = {x:95,  y:115};
+  var NJ = {x:175, y:115};
+  var NK = {x:285, y:115};
+  var NL = {x:365, y:115};
+
+  // Top single box (apex of upright △) = M value
+  var NT = {x:230, y:40};
+
+  // ── Draw triangles ──
+  ctx.lineWidth = s(1.7);
+  ctx.strokeStyle = 'rgba(90,65,20,0.7)';
+
+  // Inverted ▽ fill
+  ctx.beginPath();
+  ctx.moveTo(s(inv_TL.x), s(inv_TL.y));
+  ctx.lineTo(s(inv_TR.x), s(inv_TR.y));
+  ctx.lineTo(s(inv_B.x),  s(inv_B.y));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,245,220,0.6)';
+  ctx.fill();
+  ctx.stroke();
+
+  // Upright △ fill
+  ctx.beginPath();
+  ctx.moveTo(s(upr_BL.x), s(upr_BL.y));
+  ctx.lineTo(s(upr_BR.x), s(upr_BR.y));
+  ctx.lineTo(s(upr_T.x),  s(upr_T.y));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(238,228,205,0.6)';
+  ctx.fill();
+  ctx.stroke();
+
+  // Internal dashed guides
+  ctx.setLineDash([s(4), s(4)]);
+  ctx.lineWidth = s(0.8);
+  ctx.strokeStyle = 'rgba(90,65,20,0.25)';
+  var guides = [
+    [NI,NM],[NJ,NM],[NK,NN],[NL,NN],
+    [NM,NO],[NN,NO],
+    [NO,NQ],[NO,NP],
+    [NM,NN],[NQ,NP],
+    [NT,NM],[NT,NN]
+  ];
+  guides.forEach(function(g) {
+    ctx.beginPath(); ctx.moveTo(s(g[0].x),s(g[0].y)); ctx.lineTo(s(g[1].x),s(g[1].y)); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // ── node helpers ──
+  function rrect(x,y,w,h,r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+    ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+    ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+    ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+    ctx.closePath();
+  }
+
+  function drawBox(nx,ny,val,sz,highlight) {
+    sz = sz||34; var hs=sz/2;
+    ctx.shadowColor='rgba(0,0,0,0.12)'; ctx.shadowBlur=s(4);
+    rrect(s(nx-hs),s(ny-hs),s(sz),s(sz),s(5));
+    ctx.fillStyle = highlight ? '#e8a0a0' : '#fffcf4';
+    ctx.fill(); ctx.shadowBlur=0;
+    ctx.strokeStyle = highlight ? '#c03030' : 'rgba(90,65,20,0.65)';
+    ctx.lineWidth = highlight ? s(2) : s(1.3);
+    ctx.stroke();
+    ctx.fillStyle = highlight ? '#6a0010' : '#1a1410';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='bold '+s(sz*0.46)+'px serif';
+    ctx.fillText(val,s(nx),s(ny));
+  }
+
+  function drawCirc(nx,ny,val,rad,highlight) {
+    ctx.shadowColor='rgba(0,0,0,0.12)'; ctx.shadowBlur=s(4);
+    ctx.beginPath(); ctx.arc(s(nx),s(ny),s(rad),0,Math.PI*2);
+    ctx.fillStyle = highlight ? '#e8a0a0' : '#fffcf4';
+    ctx.fill(); ctx.shadowBlur=0;
+    ctx.strokeStyle = highlight ? '#c03030' : 'rgba(90,65,20,0.65)';
+    ctx.lineWidth = highlight ? s(2.2) : s(1.4);
+    ctx.stroke();
+    ctx.fillStyle = highlight ? '#6a0010' : '#1a1410';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='bold '+s(rad*0.9)+'px serif';
+    ctx.fillText(val,s(nx),s(ny));
+  }
+
+  // Draw top single box (M = day+month combined)
+  drawBox(NT.x, NT.y, M, 34, false);
+
+  // Top row 4 boxes (I J K L)
+  drawBox(NI.x, NI.y, I, 34, false);
+  drawBox(NJ.x, NJ.y, J, 34, false);
+  drawBox(NK.x, NK.y, K, 34, false);
+  drawBox(NL.x, NL.y, L, 34, false);
+
+  // Inner intersections
+  drawCirc(NM.x, NM.y, M, 22, false);
+  drawCirc(NN.x, NN.y, N, 22, false);
+
+  // CENTER O — RED highlight
+  drawCirc(NO.x, NO.y, O, 30, true);
+
+  // Lower intersections
+  drawCirc(NQ.x, NQ.y, Q, 22, false);
+  drawCirc(NP.x, NP.y, P, 22, false);
+
+  // column labels
+  ctx.fillStyle='rgba(90,65,20,0.5)';
+  ctx.font=s(9)+'px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  var colLab=['日期','月份','世紀','年份'];
+  [NI,NJ,NK,NL].forEach(function(n,i){ ctx.fillText(colLab[i],s(n.x),s(n.y-22)); });
+
+  // label for top single
+  ctx.fillText('月日合',s(NT.x),s(NT.y-22));
+
+  // label center O
+  ctx.fillStyle='rgba(160,20,20,0.6)';
+  ctx.font='bold '+s(8.5)+'px sans-serif';
+  ctx.fillText('主數',s(NO.x),s(NO.y+38));
+}
+
+// ── render periods ──
+function renderPeriods(S,T,U,R,V,W,X) {
+  var e=document.getElementById('p-early'); e.innerHTML='';
+  [S,T,U].forEach(function(n){e.appendChild(mkC(n,'nc-sm'));});
+  var m=document.getElementById('p-mid'); m.innerHTML='';
+  m.appendChild(mkC(R,'nc-md'));
+  var l=document.getElementById('p-late'); l.innerHTML='';
+  [V,W,X].forEach(function(n){l.appendChild(mkC(n,'nc-sm'));});
+}
+
+// ── render list ──
+function renderList(v) {
+  var container=document.getElementById('r-list'); container.innerHTML='';
+  ITEMS.forEach(function(item,i){
+    var name=item[0], vals=item[1](v);
+    var row=document.createElement('div'); row.className='r-item';
+    var idx=document.createElement('div'); idx.className='r-idx'; idx.textContent=(i+1)+'.';
+    var vd=document.createElement('div'); vd.className='r-vals';
+    vals.forEach(function(n){vd.appendChild(mkC(n,'nc-xs'));});
+    var nd=document.createElement('div'); nd.className='r-name'; nd.textContent=name;
+    row.appendChild(idx); row.appendChild(vd); row.appendChild(nd);
+    container.appendChild(row);
+  });
+}
+
+// ── render missing ──
+function renderMissing(I,J,K,L,M,N,O) {
+  var present={}; [I,J,K,L,M,N,O].forEach(function(n){present[n]=true;});
+  var wrap=document.getElementById('missing-row'); wrap.innerHTML='';
+  var any=false;
+  for(var i=1;i<=9;i++){
+    if(!present[i]){
+      any=true;
+      var d=document.createElement('div');
+      d.className='nc nc-xs '+cc(i);
+      d.style.borderStyle='dashed';
+      d.textContent=i; wrap.appendChild(d);
+    }
+  }
+  if(!any){
+    var d2=document.createElement('div');
+    d2.style.cssText='font-size:10px;color:#8a7050;text-align:center;width:100%;padding:3px 0;';
+    d2.textContent='無缺失數字'; wrap.appendChild(d2);
+  }
+}
+
+// ── render hidden ──
+function renderHidden(HIDDIG) {
+  var wrap=document.getElementById('hidden-row'); wrap.innerHTML='';
+  HIDDIG.forEach(function(n){ wrap.appendChild(mkC(n,'nc-lg')); });
+  var note=document.createElement('div');
+  note.className='hidden-note';
+  note.textContent='主性格+主性格\n逐位相加化單位數';
+  wrap.appendChild(note);
+}
+
+// resize redraw
+var _rt;
+window.addEventListener('resize',function(){
+  clearTimeout(_rt);
+  _rt=setTimeout(function(){
+    if(!document.getElementById('a4-page').classList.contains('show')) return;
+    var v=inputs.map(function(inp){var n=parseInt(inp.value,10);return isNaN(n)?0:n;});
+    var A=v[0],B=v[1],C=v[2],D=v[3],E=v[4],F=v[5],G=v[6],H=v[7];
+    var I=rd(A+B),J=rd(C+D),K=rd(E+F),L=rd(G+H);
+    var M=rd(I+J),N=rd(K+L),O=rd(M+N),P=rd(M+O),Q=rd(N+O);
+    drawDiamond(I,J,K,L,M,N,O,P,Q);
+  },150);
+});
+</script>
+</body>
+</html>
